@@ -41,6 +41,9 @@ PACKAGES="$PACKAGES luci-app-alist"
 PACKAGES="$PACKAGES luci-i18n-alist-zh-cn"
 PACKAGES="$PACKAGES luci-app-ddns"
 PACKAGES="$PACKAGES luci-i18n-ddns-zh-cn"
+PACKAGES="$PACKAGES luci-app-upnp"
+PACKAGES="$PACKAGES luci-i18n-upnp-zh-cn"
+
 
 
 
