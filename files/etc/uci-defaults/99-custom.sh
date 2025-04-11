@@ -17,7 +17,7 @@ if [ ! -f "$SETTINGS_FILE" ]; then
     echo "PPPoE settings file not found. Skipping." >> $LOGFILE
 else
    # 读取pppoe信息($enable_pppoe、$pppoe_account、$pppoe_password)
-   。 "$SETTINGS_FILE"
+   . "$SETTINGS_FILE"
 fi
 
 # 计算网卡数量
@@ -72,7 +72,9 @@ elif [ "$count" -gt 1 ]; then
    # 多网口设备 支持修改为别的ip地址
    uci set network.lan.ipaddr='192.168.11.1'
    uci set network.lan.netmask='255.255.255.0'
-   echo "set 192.168.100.1 at $(date)" >> $LOGFILE
+   uci commit network
+   echo "set 192.168.11.1 at $(date)" >> $LOGFILE
+   /etc/init.d/network restart
    # 判断是否启用 PPPoE
    echo "print enable_pppoe value=== $enable_pppoe" >> $LOGFILE
    if [ "$enable_pppoe" = "yes" ]; then
@@ -85,12 +87,13 @@ elif [ "$count" -gt 1 ]; then
       uci set network.wan.auto='1'
       # 设置ipv6 默认不配置协议
       uci set network.wan6.proto='none'
+      uci commit network
+      /etc/init.d/network restart
       echo "PPPoE configuration completed successfully." >> $LOGFILE
    else
       echo "PPPoE is not enabled. Skipping configuration." >> $LOGFILE
    fi
 fi
-
 
 # 设置所有网口可访问网页终端
 uci delete ttyd.@ttyd[0].interface
