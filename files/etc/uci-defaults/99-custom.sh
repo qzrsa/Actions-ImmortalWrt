@@ -11,65 +11,11 @@ uci add dhcp domain
 uci set "dhcp.@domain[-1].name=time.android.com"
 uci set "dhcp.@domain[-1].ip=203.107.6.88"
 
-# 检查PPPoE设置文件
-SETTINGS_FILE="/etc/config/pppoe-settings"
-if [ -f "$SETTINGS_FILE" ]; then
-    。 "$SETTINGS_FILE"
-    echo "PPPoE settings loaded" >> $LOGFILE
-else
-    echo "PPPoE settings file not found" >> $LOGFILE
-fi
-
-# 检测物理网卡
-count=0
-ifnames=""
-for iface in /sys/class/net/*; do
-    iface_name=$(basename "$iface")
-    if [ -e "$iface/device" ] && echo "$iface_name" | grep -Eq '^eth|^en'; then
-        count=$((count + 1))
-        ifnames="$ifnames $iface_name"
-    fi
-done
-ifnames=$(echo "$ifnames" | awk '{$1=$1};1')
-echo "Detected interfaces: $ifnames" >> $LOGFILE
 
 # Modify default IP
 sed -i 's/192.168.1.1/192.168.11.50/g' package/base-files/files/bin/config_generate
 sed -i "s/ImmortalWrt/OpenWrt/g" package/base-files/files/bin/config_generate
     
-    # 更新桥接设备
-    section=$(uci show network | awk -F '[.=]' '/\.@?device\[\d+\]\.name=.br-lan.$/ {print $2; exit}')
-    if [ -n "$section" ]; then
-        uci -q delete "network.$section.ports"
-        for port in $lan_ifnames; do
-            uci add_list "network.$section.ports"="$port"
-        done
-        echo "Updated bridge ports for br-lan" >> $LOGFILE
-    fi
-    
-    # 提交并重启网络
-    uci commit network
-    echo "Network configuration committed" >> $LOGFILE
-    /etc/init.d/network restart
-    echo "Network restarted" >> $LOGFILE
-    
-    # PPPoE配置
-    if [ "$enable_pppoe" = "yes" ]; then
-        echo "Configuring PPPoE" >> $LOGFILE
-        uci set network.wan.proto='pppoe'
-        uci set network.wan.username="$pppoe_account"
-        uci set network.wan.password="$pppoe_password"
-        uci set network.wan.peerdns='1'
-        uci set network.wan.auto='1'
-        uci commit network
-        /etc/init.d/network restart
-    fi
-fi
-
-# 其他设置
-uci delete ttyd.@ttyd[0].interface
-uci set dropbear.@dropbear[0].Interface=''
-uci commit
 
 # 设置编译信息
 FILE_PATH="/etc/openwrt_release"
