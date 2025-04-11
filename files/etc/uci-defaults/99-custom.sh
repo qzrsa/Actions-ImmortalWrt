@@ -14,7 +14,7 @@ uci set "dhcp.@domain[-1].ip=203.107.6.88"
 # 检查PPPoE设置文件
 SETTINGS_FILE="/etc/config/pppoe-settings"
 if [ -f "$SETTINGS_FILE" ]; then
-    . "$SETTINGS_FILE"
+    。 "$SETTINGS_FILE"
     echo "PPPoE settings loaded" >> $LOGFILE
 else
     echo "PPPoE settings file not found" >> $LOGFILE
@@ -33,29 +33,9 @@ done
 ifnames=$(echo "$ifnames" | awk '{$1=$1};1')
 echo "Detected interfaces: $ifnames" >> $LOGFILE
 
-# 网络设置
-if [ "$count" -eq 1 ]; then
-    echo "Single NIC mode" >> $LOGFILE
-    uci set network.lan.proto='dhcp'
-elif [ "$count" -gt 1 ]; then
-    echo "Multi NIC mode" >> $LOGFILE
-    wan_ifname=$(echo "$ifnames" | awk '{print $1}')
-    lan_ifnames=$(echo "$ifnames" | cut -d ' ' -f2-)
-    
-    # 配置WAN口
-    uci set network.wan=interface
-    uci set network.wan.device="$wan_ifname"
-    uci set network.wan.proto='dhcp'
-    
-    # 配置WAN6
-    uci set network.wan6=interface
-    uci set network.wan6.device="$wan_ifname"
-    uci set network.wan6.proto='dhcp6'
-    
-    # 配置LAN口
-    uci set network.lan.proto='static'
-    uci set network.lan.ipaddr='192.168.11.1'
-    uci set network.lan.netmask='255.255.255.0'
+# Modify default IP
+sed -i 's/192.168.1.1/192.168.11.50/g' package/base-files/files/bin/config_generate
+sed -i "s/ImmortalWrt/OpenWrt/g" package/base-files/files/bin/config_generate
     
     # 更新桥接设备
     section=$(uci show network | awk -F '[.=]' '/\.@?device\[\d+\]\.name=.br-lan.$/ {print $2; exit}')
