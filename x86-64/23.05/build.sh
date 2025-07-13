@@ -20,6 +20,21 @@ cat /home/build/immortalwrt/files/etc/config/pppoe-settings
 # 输出调试信息
 echo "$(date '+%Y-%m-%d %H:%M:%S') - 开始编译..."
 
+# ============= 同步第三方插件库==============
+# 下载 run 文件仓库
+echo "🔄 Cloning run file repo..."
+git clone --depth=1 https://github.com/wukongdaily/store.git /tmp/store-run-repo
+
+# 拷贝 run/x86 下所有 run 文件和ipk文件 到 extra-packages 目录
+mkdir -p /home/build/immortalwrt/extra-packages
+cp -r /tmp/store-run-repo/run/x86/* /home/build/immortalwrt/extra-packages/
+
+echo "✅ Run files copied to extra-packages:"
+ls -lh /home/build/immortalwrt/extra-packages/*.run
+# 解压并拷贝ipk到packages目录
+sh prepare-packages.sh
+ls -lah /home/build/immortalwrt/packages/
+
 
 
 # 定义所需安装的包列表 下列插件你都可以自行删减
